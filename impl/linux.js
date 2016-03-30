@@ -49,7 +49,7 @@ var getInfo = function (cb) {
     if(err) {
       cb(err);
     } else {
-      amixer(['get', dev], function (err, data) {
+      amixer(['-M', 'get', dev], function (err, data) {
         if(err) {
           cb(err);
         } else {
@@ -83,7 +83,7 @@ module.exports.setVolume = function (val, cb) {
     if(err) {
       cb(err);
     } else {
-      amixer(['set', dev, val + '%'], function (err) {
+      amixer(['-M', 'set', dev, val + '%'], function (err) {
         cb(err);
       });
     }
