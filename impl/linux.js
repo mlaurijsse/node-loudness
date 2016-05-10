@@ -44,38 +44,52 @@ var defaultDevice = function(cb) {
 };
 
 var reInfo = /[a-z][a-z ]*\: Playback [0-9-]+ \[([0-9]+)\%\] (?:[[0-9\.-]+dB\] )?\[(on|off)\]/i;
-var getInfo = function (cb) {
-  defaultDevice(function (err, dev) {
+var getInfo = function (dev, cb) {
+  amixer(['-M', 'get', dev], function (err, data) {
     if(err) {
       cb(err);
     } else {
-      amixer(['-M', 'get', dev], function (err, data) {
-        if(err) {
-          cb(err);
-        } else {
-          var res = reInfo.exec(data);
-          if(res === null) {
-            cb(new Error('Alsa Mixer Error: failed to parse output'));
-          } else {
-            cb(null, {
-              volume: parseInt(res[1], 10),
-              muted: (res[2] == 'off')
-            });
-          }
-        }
-      });
+      var res = reInfo.exec(data);
+      if(res === null) {
+        cb(new Error('Alsa Mixer Error: failed to parse output'));
+      } else {
+        cb(null, {
+          volume: parseInt(res[1], 10),
+          muted: (res[2] == 'off')
+        });
+      }
     }
   });
 };
 
-module.exports.getVolume = function (cb) {
-  getInfo(function (err, obj) {
-    if(err) {
-      cb(err);
-    } else {
-      cb(null, obj.volume);
-    }
-  });
+module.exports.getVolume = function (device, cb) {
+  if (arguments.length == 1) {
+    cb = device;
+    device = 'default';
+  }
+  if (device == 'default') {
+    defaultDevice(function (err, dev) {
+      if(err) {
+        cb(err);
+      } else {
+        getInfo(dev, function (err, obj) {
+          if(err) {
+            cb(err);
+          } else {
+            cb(null, obj.volume);
+          }
+        });
+      }
+    });
+  } else {
+    getInfo(device, function (err, obj) {
+      if(err) {
+        cb(err);
+      } else {
+        cb(null, obj.volume);
+      }
+    });
+  }
 };
 
 module.exports.setVolume = function (val, cb) {
@@ -90,14 +104,34 @@ module.exports.setVolume = function (val, cb) {
   });
 };
 
-module.exports.getMuted = function (cb) {
-  getInfo(function (err, obj) {
-    if(err) {
-      cb(err);
-    } else {
-      cb(null, obj.muted);
-    }
-  });
+module.exports.getMuted = function (device, cb) {
+  if (arguments.length == 1) {
+    cb = device;
+    device = 'default';
+  }
+  if (device == 'default') {
+    defaultDevice(function (err, dev) {
+      if(err) {
+        cb(err);
+      } else {
+        getInfo(dev, function (err, obj) {
+          if(err) {
+            cb(err);
+          } else {
+            cb(null, obj.muted);
+          }
+        });
+      }
+    });
+  } else {
+    getInfo(device, function (err, obj) {
+      if(err) {
+        cb(err);
+      } else {
+        cb(null, obj.muted);
+      }
+    });
+  }
 };
 
 module.exports.setMuted = function (val, cb) {
